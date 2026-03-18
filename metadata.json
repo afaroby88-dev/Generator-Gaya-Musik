@@ -1,0 +1,5 @@
+{
+  "name": "Remix: AI Music Prompt Architect",
+  "description": "Optimize lyrics, style, and album covers for Suno \u0026 Udio using Gemini AI.",
+  "requestFramePermissions": []
+}
