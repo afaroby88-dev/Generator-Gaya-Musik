@@ -15,7 +15,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { GoogleGenAI, Type } from "@google/genai";
 import { OPTIONS } from './constants';
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || 'AIzaSyBb8I3SNZbDkV9y8GiOTxpIRYYUV3QU9i4';
+const ai = new GoogleGenAI({ apiKey: API_KEY });
 
 interface GeneratedResult {
   style: string;
@@ -26,11 +27,11 @@ interface GeneratedResult {
 export default function App() {
   const [lyrics, setLyrics] = useState('');
   const [selected, setSelected] = useState<Record<string, string[]>>({
-    genres: [],
-    instruments: [],
-    moods: [],
-    vocals: [],
-    tempos: []
+    genre: [],
+    instrumen: [],
+    suasana: [],
+    vokal: [],
+    tempo: []
   });
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<GeneratedResult | null>(null);
@@ -64,17 +65,17 @@ export default function App() {
     3. "formattedLyrics": Lirik dengan tag struktur [Verse], [Chorus], dll.`;
 
     const userPrompt = `Lirik: "${lyrics}". 
-    Genre: ${selected.genres.join(', ')}. 
-    Instrumen: ${selected.instruments.join(', ')}. 
-    Mood: ${selected.moods.join(', ')}. 
-    Vokal: ${selected.vocals.join(', ')}. 
-    Tempo: ${selected.tempos.join(', ')}.`;
+    Genre: ${selected.genre.join(', ')}. 
+    Instrumen: ${selected.instrumen.join(', ')}. 
+    Suasana: ${selected.suasana.join(', ')}. 
+    Vokal: ${selected.vokal.join(', ')}. 
+    Tempo: ${selected.tempo.join(', ')}.`;
 
     try {
       // Step 1: Generate Prompt & Lyrics
       const textResponse = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
-        contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+        contents: [{ parts: [{ text: userPrompt }] }],
         config: {
           systemInstruction,
           responseMimeType: "application/json",
@@ -90,31 +91,52 @@ export default function App() {
         }
       });
 
-      const data = JSON.parse(textResponse.text || '{}') as GeneratedResult;
+      const text = textResponse.text;
+      if (!text) {
+        throw new Error("AI tidak memberikan respons teks. Mungkin karena filter keamanan atau masalah teknis.");
+      }
+
+      const data = JSON.parse(text) as GeneratedResult;
       setResult(data);
 
       // Step 2: Generate Cover Image
-      const imagePrompt = `Cinematic 16:9 aspect ratio album cover, ${data.image_prompt}, high quality, artistic, professional photography or digital art, no text, no watermark.`;
-      
-      const imageResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image',
-        contents: {
-          parts: [{ text: imagePrompt }]
-        },
-        config: {
-          imageConfig: {
-            aspectRatio: "16:9"
+      try {
+        const imagePrompt = `Cinematic 16:9 aspect ratio album cover, ${data.image_prompt}, high quality, artistic, professional photography or digital art, no text, no watermark.`;
+        
+        const imageResponse = await ai.models.generateContent({
+          model: 'gemini-2.5-flash-image',
+          contents: [{ parts: [{ text: imagePrompt }] }],
+          config: {
+            imageConfig: {
+              aspectRatio: "16:9"
+            }
           }
-        }
-      });
+        });
 
-      const imagePart = imageResponse.candidates?.[0]?.content?.parts.find(p => p.inlineData);
-      if (imagePart?.inlineData) {
-        setCoverUrl(`data:image/png;base64,${imagePart.inlineData.data}`);
+        const imagePart = imageResponse.candidates?.[0]?.content?.parts.find(p => p.inlineData);
+        if (imagePart?.inlineData) {
+          setCoverUrl(`data:image/png;base64,${imagePart.inlineData.data}`);
+        } else {
+          console.warn("Gagal membuat gambar, tapi teks berhasil.");
+        }
+      } catch (imgErr) {
+        console.error("Image Generation Error:", imgErr);
+        // Jangan gagalkan seluruh proses jika hanya gambar yang gagal
       }
-    } catch (error) {
-      console.error(error);
-      alert("Terjadi kesalahan saat membuat komposisi.");
+
+    } catch (error: any) {
+      console.error("Full Generation Error:", error);
+      let errorMsg = "Terjadi kesalahan tidak diketahui.";
+      
+      if (error?.message?.includes("API key not valid")) {
+        errorMsg = "Kunci API tidak valid. Silakan periksa pengaturan Secrets Anda.";
+      } else if (error?.message?.includes("Quota exceeded")) {
+        errorMsg = "Kuota API telah habis. Silakan coba lagi nanti.";
+      } else if (error?.message) {
+        errorMsg = error.message;
+      }
+
+      alert(`Gagal membuat komposisi: ${errorMsg}`);
     } finally {
       setLoading(false);
     }
@@ -166,14 +188,14 @@ export default function App() {
             <section className="bg-[#1e293b] border border-slate-700/50 rounded-3xl p-6 shadow-2xl">
               <h2 className="text-xl font-bold mb-6 flex items-center gap-3 text-purple-400">
                 <Settings2 className="w-6 h-6" />
-                Kustomisasi Style
+                Kustomisasi Gaya
               </h2>
               <div className="space-y-8 max-h-[500px] overflow-y-auto pr-4 custom-scrollbar">
                 {Object.entries(OPTIONS).map(([key, opts]) => (
                   <div key={key}>
                     <p className="text-xs font-black text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                      {key === 'genres' && <Music className="w-3 h-3" />}
-                      {key === 'vocals' && <Mic2 className="w-3 h-3" />}
+                      {key === 'genre' && <Music className="w-3 h-3" />}
+                      {key === 'vokal' && <Mic2 className="w-3 h-3" />}
                       {key}
                     </p>
                     <div className="flex flex-wrap gap-2">
@@ -237,13 +259,13 @@ export default function App() {
                     <div className="bg-[#1e293b] border border-slate-700/50 rounded-3xl p-6 shadow-2xl">
                       <h3 className="text-xs font-black text-emerald-400 uppercase tracking-widest mb-4 flex items-center gap-2">
                         <ImageIcon className="w-4 h-4" />
-                        Album Cover (16:9)
+                        Sampul Album (16:9)
                       </h3>
                       <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-900 border border-slate-700 group">
                         {coverUrl ? (
                           <img 
                             src={coverUrl} 
-                            alt="Album Cover" 
+                            alt="Sampul Album" 
                             className="w-full h-full object-cover"
                             referrerPolicy="no-referrer"
                           />
@@ -260,7 +282,7 @@ export default function App() {
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="text-xs font-black text-blue-400 uppercase tracking-widest flex items-center gap-2">
                           <Zap className="w-4 h-4" />
-                          Style Prompt
+                          Prompt Gaya
                         </h3>
                         <button 
                           onClick={() => copyToClipboard(result.style, 'style')}
