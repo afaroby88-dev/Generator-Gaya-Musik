@@ -15,7 +15,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { GoogleGenAI, Type } from "@google/genai";
 import { OPTIONS } from './constants';
 
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || 'AIzaSyBb8I3SNZbDkV9y8GiOTxpIRYYUV3QU9i4';
+const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || 'AIzaSyDZTpJ_cTCeWjIU2ZtMCgNSeAo-Vyma-ww';
 const ai = new GoogleGenAI({ apiKey: API_KEY });
 
 interface GeneratedResult {
