@@ -157,7 +157,7 @@ export default function App() {
             animate={{ opacity: 1, y: 0 }}
             className="text-4xl md:text-6xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 mb-4"
           >
-            Music Prompt Architect
+            Gen Ali Maksum
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0 }}
