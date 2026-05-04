@@ -23,7 +23,7 @@ export const OPTIONS = {
     "Psikedelik", "Minimalis", "Seksi", "Canggih"
   ],
   vokal: [
-    "Pria", "Wanita", "Serak", "Opera", "Paduan Suara", "Berbisik", "Soulful", "Duet", "Nada Tinggi", "Screaming", 
+    "Male", "Female", "Serak", "Opera", "Paduan Suara", "Berbisik", "Soulful", "Duet", "Nada Tinggi", "Screaming", 
     "Bass Dalam", "Auto-tune", "Vocaloid", "Rap", "Growl", "Breathys", "Harmonisasi", "Furry", "Suara Anak",
     "Falsetto", "Vibrato", "Monoton", "Kata-kata Lisan", "Scat Singing", "Yodeling", "Belting", "Head Voice", "Chest Voice"
   ],
